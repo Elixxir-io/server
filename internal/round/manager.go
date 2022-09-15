@@ -60,7 +60,7 @@ func (rm *Manager) GetRound(id id.Round) (*Round, error) {
 // as it is intended to be called from network handlers
 func (rm *Manager) GetPhase(id id.Round, phaseTy int32) (phase.Phase, error) {
 	// First, check that the phase type id # is valid
-	if phaseTy < 0 || phaseTy >= phase.NUM_PHASES {
+	if phaseTy < 0 || phaseTy >= int32(phase.NUM_PHASES) {
 		return nil, errors.Errorf("Invalid phase Type Number: %d",
 			phaseTy)
 	}
@@ -93,7 +93,7 @@ func (rm *Manager) HandleIncomingComm(roundID id.Round, tag string) (*Round, pha
 	if err != nil {
 		return nil, nil, err
 	}
-	//Get the correct phase from the round based upon the response table
+	// Get the correct phase from the round based upon the response table
 	p, err := r.HandleIncomingComm(tag)
 	if err != nil {
 		return nil, nil, err
