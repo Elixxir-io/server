@@ -18,6 +18,7 @@ import (
 	"gitlab.com/elixxir/crypto/cyclic"
 	"gitlab.com/elixxir/crypto/fastRNG"
 	"gitlab.com/elixxir/crypto/registration"
+	"gitlab.com/elixxir/crypto/rsa"
 	"gitlab.com/elixxir/primitives/current"
 	"gitlab.com/elixxir/server/internal"
 	"gitlab.com/elixxir/server/internal/measure"
@@ -30,7 +31,7 @@ import (
 	"gitlab.com/xx_network/comms/messages"
 	"gitlab.com/xx_network/crypto/csprng"
 	"gitlab.com/xx_network/crypto/large"
-	"gitlab.com/xx_network/crypto/signature/rsa"
+	oldRsa "gitlab.com/xx_network/crypto/signature/rsa"
 	"gitlab.com/xx_network/primitives/id"
 	"gitlab.com/xx_network/primitives/utils"
 	"math/rand"
@@ -64,7 +65,7 @@ func TestRequestClientKey(t *testing.T) {
 			"Could not parse precanned time: %v", err.Error())
 	}
 	// Convert public key to PEM
-	clientRSAPubKeyPEM := rsa.CreatePublicKeyPem(userRsaPub)
+	clientRSAPubKeyPEM := userRsaPub.MarshalPem()
 
 	// Sign timestamp
 	sigReg, err := registration.SignWithTimestamp(csprng.NewSystemRNG(),
@@ -107,7 +108,7 @@ func TestRequestClientKey(t *testing.T) {
 	for _, useSha := range []bool{false, true} {
 		t.Run(fmt.Sprintf("TestRequestClientKey[useSha=%+v]", useSha), func(t *testing.T) {
 			// Hash request
-			opts := rsa.NewDefaultOptions()
+			opts := oldRsa.NewDefaultOptions()
 			if useSha {
 				opts.Hash = crypto.SHA256
 			}
@@ -116,7 +117,7 @@ func TestRequestClientKey(t *testing.T) {
 			hashedData := h.Sum(nil)
 
 			// Sign the request with the user's private key
-			requestSig, err := rsa.Sign(csprng.NewSystemRNG(), userRsaPriv, opts.Hash, hashedData, opts)
+			requestSig, err := oldRsa.Sign(csprng.NewSystemRNG(), userRsaPriv, opts.Hash, hashedData, opts)
 			if err != nil {
 				t.Fatalf("Sign error: %v", err)
 			}
@@ -206,7 +207,7 @@ func TestRequestClientKey_BadClientRegistrarSignature(t *testing.T) {
 			"Could not parse precanned time: %v", err.Error())
 	}
 	// Convert public key to PEM
-	clientRSAPubKeyPEM := rsa.CreatePublicKeyPem(userRsaPub)
+	clientRSAPubKeyPEM := userRsaPub.MarshalPem()
 
 	// Sign timestamp incorrectly with server private key
 	sigReg, err := registration.SignWithTimestamp(csprng.NewSystemRNG(),
@@ -277,7 +278,7 @@ func TestRequestClientKey_BadClientSignature(t *testing.T) {
 			"Could not parse precanned time: %v", err.Error())
 	}
 	// Convert public key to PEM
-	clientRSAPubKeyPEM := rsa.CreatePublicKeyPem(userRsaPub)
+	clientRSAPubKeyPEM := userRsaPub.MarshalPem()
 
 	// Sign timestamp
 	sigReg, err := registration.SignWithTimestamp(csprng.NewSystemRNG(),
@@ -317,13 +318,13 @@ func TestRequestClientKey_BadClientSignature(t *testing.T) {
 	}
 
 	// Hash request
-	opts := rsa.NewDefaultOptions()
+	opts := oldRsa.NewDefaultOptions()
 	h := opts.Hash.New()
 	h.Write(requestBytes)
 	hashedData := h.Sum(nil)
 
 	// Sign the request incorrectly with the registrar's private key
-	requestSig, err := rsa.Sign(csprng.NewSystemRNG(), clientRegistrarPrivKey,
+	requestSig, err := oldRsa.Sign(csprng.NewSystemRNG(), clientRegistrarPrivKey,
 		opts.Hash, hashedData, opts)
 	if err != nil {
 		t.Fatalf("Sign error: %v", err)
@@ -401,7 +402,7 @@ func TestRequestClientKey_UnmarshalRegistrationConfirmError(t *testing.T) {
 			"Could not parse precanned time: %v", err.Error())
 	}
 	// Convert public key to PEM
-	clientRSAPubKeyPEM := rsa.CreatePublicKeyPem(userRsaPub)
+	clientRSAPubKeyPEM := userRsaPub.MarshalPem()
 
 	// Sign timestamp
 	sigReg, err := registration.SignWithTimestamp(csprng.NewSystemRNG(),
@@ -433,13 +434,13 @@ func TestRequestClientKey_UnmarshalRegistrationConfirmError(t *testing.T) {
 	}
 
 	// Hash request
-	opts := rsa.NewDefaultOptions()
+	opts := oldRsa.NewDefaultOptions()
 	h := opts.Hash.New()
 	h.Write(requestBytes)
 	hashedData := h.Sum(nil)
 
 	// Sign the request with the user's private key
-	requestSig, err := rsa.Sign(csprng.NewSystemRNG(), userRsaPriv, opts.Hash, hashedData, opts)
+	requestSig, err := oldRsa.Sign(csprng.NewSystemRNG(), userRsaPriv, opts.Hash, hashedData, opts)
 	if err != nil {
 		t.Fatalf("Sign error: %v", err)
 	}
@@ -482,7 +483,7 @@ func TestRequestClientKey_NoNodeSecret(t *testing.T) {
 			"Could not parse precanned time: %v", err.Error())
 	}
 	// Convert public key to PEM
-	clientRSAPubKeyPEM := rsa.CreatePublicKeyPem(userRsaPub)
+	clientRSAPubKeyPEM := userRsaPub.MarshalPem()
 
 	// Sign timestamp
 	sigReg, err := registration.SignWithTimestamp(csprng.NewSystemRNG(),
@@ -522,13 +523,13 @@ func TestRequestClientKey_NoNodeSecret(t *testing.T) {
 	}
 
 	// Hash request
-	opts := rsa.NewDefaultOptions()
+	opts := oldRsa.NewDefaultOptions()
 	h := opts.Hash.New()
 	h.Write(requestBytes)
 	hashedData := h.Sum(nil)
 
 	// Sign the request with the user's private key
-	requestSig, err := rsa.Sign(csprng.NewSystemRNG(), userRsaPriv, opts.Hash, hashedData, opts)
+	requestSig, err := oldRsa.Sign(csprng.NewSystemRNG(), userRsaPriv, opts.Hash, hashedData, opts)
 	if err != nil {
 		t.Fatalf("Sign error: %v", err)
 	}
@@ -550,7 +551,7 @@ func TestRequestClientKey_NoNodeSecret(t *testing.T) {
 
 }
 
-func setup(t interface{}) (*internal.Instance, *rsa.PublicKey, *rsa.PrivateKey, *cyclic.Int, *cyclic.Int, *rsa.PrivateKey, *id.ID, string) {
+func setup(t interface{}) (*internal.Instance, rsa.PublicKey, *oldRsa.PrivateKey, *cyclic.Int, *cyclic.Int, *oldRsa.PrivateKey, *id.ID, string) {
 	switch v := t.(type) {
 	case *testing.T:
 	case *testing.M:
@@ -581,30 +582,31 @@ func setup(t interface{}) (*internal.Instance, *rsa.PublicKey, *rsa.PrivateKey, 
 	var err error
 
 	//make client rsa key pair
-	cRsaPriv, err := rsa.GenerateKey(csprng.NewSystemRNG(), 1024)
+	cRsaPriv, err := oldRsa.GenerateKey(csprng.NewSystemRNG(), 1024)
 	if err != nil {
 		panic(fmt.Sprintf("Could not generate node private key: %+v", err))
 	}
 
-	cRsaPub := cRsaPriv.GetPublic()
+	cRsaPub := rsa.GetScheme().ConvertPublic(&cRsaPriv.GetPublic().PublicKey)
 
 	//make client DH key
 	clintDHPriv := grp.RandomCoprime(grp.NewInt(1))
 	cDhPub := grp.ExpG(clintDHPriv, grp.NewInt(1))
 
 	//make registration rsa key pair
-	regPKey, err := rsa.GenerateKey(csprng.NewSystemRNG(), 1024)
+	regPKey, err := oldRsa.GenerateKey(csprng.NewSystemRNG(), 1024)
 	if err != nil {
 		panic(fmt.Sprintf("Could not generate registration private key: %+v", err))
 	}
 
 	//make server rsa key pair
-	serverRSAPriv, err := rsa.GenerateKey(csprng.NewSystemRNG(), 1024)
+	serverRSAPriv, err := oldRsa.GenerateKey(csprng.NewSystemRNG(), 1024)
 	if err != nil {
 		panic(fmt.Sprintf("Could not generate node private key: %+v", err))
 	}
 
-	serverRSAPub := serverRSAPriv.GetPublic()
+	serverRSAPub := rsa.GetScheme().ConvertPublic(&serverRSAPriv.GetPublic().PublicKey)
+
 	nodeAddr := fmt.Sprintf("0.0.0.0:%d", 7000+rand.Intn(1000)+cnt)
 	cnt++
 	def := internal.Definition{
@@ -658,7 +660,7 @@ func createMockInstance(t *testing.T, instIndex int, s current.Activity) (*inter
 			uint(runtime.NumCPU()), csprng.NewSystemRNG),
 	}
 
-	privKey, err := rsa.GenerateKey(cryptoRand.Reader, 1024)
+	privKey, err := oldRsa.GenerateKey(cryptoRand.Reader, 1024)
 	if err != nil {
 		t.Fatalf("Failed to generate priv key: %v", err)
 	}

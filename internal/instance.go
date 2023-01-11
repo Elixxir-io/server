@@ -29,6 +29,7 @@ import (
 	"gitlab.com/elixxir/comms/network"
 	"gitlab.com/elixxir/comms/node"
 	"gitlab.com/elixxir/crypto/fastRNG"
+	"gitlab.com/elixxir/crypto/rsa"
 	gpumaths "gitlab.com/elixxir/gpumathsgo"
 	"gitlab.com/elixxir/primitives/current"
 	"gitlab.com/elixxir/server/internal/measure"
@@ -41,7 +42,7 @@ import (
 	"gitlab.com/xx_network/comms/messages"
 	"gitlab.com/xx_network/comms/signature"
 	"gitlab.com/xx_network/crypto/csprng"
-	"gitlab.com/xx_network/crypto/signature/rsa"
+	oldRsa "gitlab.com/xx_network/crypto/signature/rsa"
 	"gitlab.com/xx_network/primitives/id"
 	"gitlab.com/xx_network/primitives/utils"
 )
@@ -413,12 +414,12 @@ func (i *Instance) GetID() *id.ID {
 }
 
 // GetPubKey returns the server DSA public key
-func (i *Instance) GetPubKey() *rsa.PublicKey {
+func (i *Instance) GetPubKey() rsa.PublicKey {
 	return i.definition.PublicKey
 }
 
 // GetPrivKey returns the server RSA private key
-func (i *Instance) GetPrivKey() *rsa.PrivateKey {
+func (i *Instance) GetPrivKey() *oldRsa.PrivateKey {
 	return i.definition.PrivateKey
 }
 
@@ -432,13 +433,13 @@ func (i *Instance) GetFirstRun() bool {
 	return atomic.LoadUint32(i.firstRun) == 1
 }
 
-//GetKeepBuffers returns if buffers are to be held on it
+// GetKeepBuffers returns if buffers are to be held on it
 func (i *Instance) GetKeepBuffers() bool {
 	return i.definition.Flags.KeepBuffers
 }
 
-//GetRegServerPubKey returns the public key of the registration server
-func (i *Instance) GetRegServerPubKey() *rsa.PublicKey {
+// GetRegServerPubKey returns the public key of the registration server
+func (i *Instance) GetRegServerPubKey() *oldRsa.PublicKey {
 	return i.definition.Network.PublicKey
 }
 
@@ -658,12 +659,12 @@ func GenerateId(i interface{}) *id.ID {
 	return nid
 }
 
-//reports an error from the node which is not associated with a round
+// reports an error from the node which is not associated with a round
 func (i *Instance) ReportNodeFailure(errIn error) {
 	i.ReportRoundFailure(errIn, i.GetID(), 0)
 }
 
-//reports an error from a different node in the round the node is participating in
+// reports an error from a different node in the round the node is participating in
 func (i *Instance) ReportRemoteFailure(roundErr *mixmessages.RoundError) {
 	i.reportFailure(roundErr)
 }

@@ -12,11 +12,11 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/viper v1.7.1
 	gitlab.com/elixxir/comms v0.0.4-0.20230110212240-9764d391d692
-	gitlab.com/elixxir/crypto v0.0.7-0.20230109232445-64f3e6192c3a
+	gitlab.com/elixxir/crypto v0.0.7-0.20230111224558-dc975fb36598
 	gitlab.com/elixxir/gpumathsgo v0.1.1-0.20220901223158-f0f1496060cb
 	gitlab.com/elixxir/primitives v0.0.3-0.20230109222259-f62b2a90b62c
 	gitlab.com/xx_network/comms v0.0.4-0.20230109222246-7de292982747
-	gitlab.com/xx_network/crypto v0.0.5-0.20230109222209-557b66d73c33
+	gitlab.com/xx_network/crypto v0.0.5-0.20230111175949-f3b64bf3d240
 	gitlab.com/xx_network/primitives v0.0.4-0.20221219230308-4b5550a9247d
 	golang.org/x/crypto v0.5.0
 	google.golang.org/grpc v1.49.0

@@ -9,9 +9,10 @@ package internal
 
 import (
 	"gitlab.com/elixxir/crypto/fastRNG"
+	"gitlab.com/elixxir/crypto/rsa"
 	"gitlab.com/elixxir/server/internal/measure"
 	"gitlab.com/elixxir/server/services"
-	"gitlab.com/xx_network/crypto/signature/rsa"
+	oldRsa "gitlab.com/xx_network/crypto/signature/rsa"
 	"gitlab.com/xx_network/primitives/id"
 	"gitlab.com/xx_network/primitives/ndf"
 )
@@ -33,9 +34,9 @@ type Definition struct {
 	// The Salt used to generate the Node ID
 	Salt []byte
 
-	//DSA Keys defining the node's ownership
-	PublicKey  *rsa.PublicKey
-	PrivateKey *rsa.PrivateKey
+	//RSA Keys defining the node's ownership
+	PublicKey  rsa.PublicKey
+	PrivateKey *oldRsa.PrivateKey
 
 	//PEM file containing the TLS cert
 	TlsCert []byte
@@ -109,7 +110,7 @@ type Flags struct {
 	OverrideInternalIP string
 }
 
-//Holds information about another node in the network
+// Holds information about another node in the network
 type Node struct {
 	// ID of the other node
 	ID *id.ID
@@ -124,7 +125,7 @@ type Perm struct {
 	// PEM file containing the TLS cert
 	TlsCert []byte
 	// Public key used to sign valid client registrations
-	PublicKey *rsa.PublicKey
+	PublicKey *oldRsa.PublicKey
 	// IP address of the permissioning server
 	Address string
 }

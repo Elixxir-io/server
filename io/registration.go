@@ -16,11 +16,11 @@ import (
 	pb "gitlab.com/elixxir/comms/mixmessages"
 	"gitlab.com/elixxir/crypto/hash"
 	"gitlab.com/elixxir/crypto/registration"
+	"gitlab.com/elixxir/crypto/rsa"
 	"gitlab.com/elixxir/server/internal"
 	"gitlab.com/xx_network/comms/connect"
 	"gitlab.com/xx_network/crypto/chacha"
 	"gitlab.com/xx_network/crypto/csprng"
-	"gitlab.com/xx_network/crypto/signature/rsa"
 	"gitlab.com/xx_network/crypto/xx"
 	"gitlab.com/xx_network/primitives/id"
 	"gitlab.com/xx_network/primitives/ndf"
@@ -55,7 +55,7 @@ func RequestClientKey(instance *internal.Instance,
 	}
 
 	// Construct hash
-	opts := rsa.NewDefaultOptions()
+	opts := rsa.NewDefaultPSSOptions()
 	if request.UseSHA { // Use sha256 if client requests it
 		opts.Hash = crypto.SHA256
 	} else {
@@ -92,7 +92,7 @@ func RequestClientKey(instance *internal.Instance,
 	}
 
 	// Assemble Client public key into rsa.PublicKey
-	userPublicKey, err := rsa.LoadPublicKeyFromPem([]byte(clientRsaPub))
+	userPublicKey, err := rsa.GetScheme().UnmarshalPublicKeyPEM([]byte(clientRsaPub))
 	if err != nil {
 		errMsg := errors.Errorf("Unable to decode client RSA Pub Key: %+v", err)
 		return &pb.SignedKeyResponse{Error: errMsg.Error()}, errMsg
@@ -104,7 +104,7 @@ func RequestClientKey(instance *internal.Instance,
 	data := h.Sum(nil)
 
 	// Verify the signedResponse
-	err = rsa.Verify(userPublicKey, opts.Hash, data,
+	err = userPublicKey.VerifyPSS(opts.Hash, data,
 		request.GetClientKeyRequestSignature().GetSignature(), opts)
 	if err != nil {
 		errMsg := errors.Errorf("Client signedResponse on client public key "+

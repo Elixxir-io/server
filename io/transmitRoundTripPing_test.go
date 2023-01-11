@@ -12,6 +12,7 @@ import (
 	"gitlab.com/elixxir/comms/mixmessages"
 	"gitlab.com/elixxir/comms/node"
 	"gitlab.com/elixxir/crypto/cyclic"
+	"gitlab.com/elixxir/crypto/rsa"
 	"gitlab.com/elixxir/primitives/current"
 	"gitlab.com/elixxir/server/internal"
 	"gitlab.com/elixxir/server/internal/measure"
@@ -23,7 +24,7 @@ import (
 	"gitlab.com/xx_network/comms/messages"
 	"gitlab.com/xx_network/crypto/csprng"
 	"gitlab.com/xx_network/crypto/large"
-	"gitlab.com/xx_network/crypto/signature/rsa"
+	oldRsa "gitlab.com/xx_network/crypto/signature/rsa"
 	"gitlab.com/xx_network/primitives/id"
 	"testing"
 )
@@ -48,12 +49,12 @@ func TestTransmitRoundTripPing(t *testing.T) {
 		[]*node.Implementation{impl, impl, impl}, 10, t)
 	defer Shutdown(comms)
 
-	mockRSAPriv, err := rsa.GenerateKey(csprng.NewSystemRNG(), 1024)
+	mockRSAPriv, err := oldRsa.GenerateKey(csprng.NewSystemRNG(), 1024)
 	if err != nil {
 		panic(fmt.Sprintf("Could not generate node private key: %+v", err))
 	}
 
-	mockRSAPub := mockRSAPriv.GetPublic()
+	pubKey := rsa.GetScheme().ConvertPublic(&mockRSAPriv.GetPublic().PublicKey)
 
 	primeString := "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1" +
 		"29024E088A67CC74020BBEA63B139B22514A08798E3404DD" +
@@ -75,7 +76,7 @@ func TestTransmitRoundTripPing(t *testing.T) {
 		ID:              nid,
 		ResourceMonitor: &measure.ResourceMonitor{},
 		PrivateKey:      mockRSAPriv,
-		PublicKey:       mockRSAPub,
+		PublicKey:       pubKey,
 		FullNDF:         testUtil.NDF,
 		PartialNDF:      testUtil.NDF,
 		Flags:           internal.Flags{OverrideInternalIP: "0.0.0.0"},

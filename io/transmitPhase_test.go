@@ -12,6 +12,7 @@ import (
 	"gitlab.com/elixxir/comms/mixmessages"
 	"gitlab.com/elixxir/comms/node"
 	"gitlab.com/elixxir/comms/testkeys"
+	"gitlab.com/elixxir/crypto/rsa"
 	"gitlab.com/elixxir/primitives/current"
 	"gitlab.com/elixxir/server/internal"
 	"gitlab.com/elixxir/server/internal/measure"
@@ -22,7 +23,7 @@ import (
 	"gitlab.com/elixxir/server/testUtil"
 	"gitlab.com/xx_network/comms/connect"
 	"gitlab.com/xx_network/crypto/csprng"
-	"gitlab.com/xx_network/crypto/signature/rsa"
+	oldRsa "gitlab.com/xx_network/crypto/signature/rsa"
 	"gitlab.com/xx_network/primitives/id"
 	"gitlab.com/xx_network/primitives/utils"
 	"math/rand"
@@ -181,7 +182,7 @@ func mockInstance(t interface{}, impl func(instance *internal.Instance) *node.Im
 	var err error
 
 	//make registration rsa key pair
-	regPKey, err := rsa.GenerateKey(csprng.NewSystemRNG(), 1024)
+	regPKey, err := oldRsa.GenerateKey(csprng.NewSystemRNG(), 1024)
 	if err != nil {
 		panic(fmt.Sprintf("Could not generate registration private key: %+v", err))
 	}
@@ -189,7 +190,8 @@ func mockInstance(t interface{}, impl func(instance *internal.Instance) *node.Im
 	//make server rsa key pair
 	pk, _ := utils.ReadFile(testkeys.GetNodeKeyPath())
 
-	privKey, _ := rsa.LoadPrivateKeyFromPem(pk)
+	privKey, _ := oldRsa.LoadPrivateKeyFromPem(pk)
+	pubKey := rsa.GetScheme().ConvertPublic(&privKey.GetPublic().PublicKey)
 
 	//serverRSAPub := serverRSAPriv.GetPublic()
 	nodeAddr := fmt.Sprintf("0.0.0.0:%d", 7000+rand.Intn(1000)+cnt)
@@ -200,7 +202,7 @@ func mockInstance(t interface{}, impl func(instance *internal.Instance) *node.Im
 		ID:               nid,
 		ResourceMonitor:  &measure.ResourceMonitor{},
 		PrivateKey:       privKey,
-		PublicKey:        privKey.GetPublic(),
+		PublicKey:        pubKey,
 		TlsCert:          cert,
 		TlsKey:           key,
 		FullNDF:          testUtil.NDF,

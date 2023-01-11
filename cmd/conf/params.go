@@ -20,10 +20,11 @@ import (
 	"github.com/spf13/viper"
 	"gitlab.com/elixxir/comms/publicAddress"
 	"gitlab.com/elixxir/crypto/cmix"
+	"gitlab.com/elixxir/crypto/rsa"
 	"gitlab.com/elixxir/server/internal"
 	"gitlab.com/elixxir/server/services"
 	"gitlab.com/xx_network/crypto/csprng"
-	"gitlab.com/xx_network/crypto/signature/rsa"
+	oldRsa "gitlab.com/xx_network/crypto/signature/rsa"
 	"gitlab.com/xx_network/crypto/tls"
 	"gitlab.com/xx_network/crypto/xx"
 	"gitlab.com/xx_network/primitives/id"
@@ -316,8 +317,8 @@ func (p *Params) ConvertToDefinition() (*internal.Definition, error) {
 	}
 
 	//Set the node's private/public key
-	var privateKey *rsa.PrivateKey
-	var publicKey *rsa.PublicKey
+	var privateKey *oldRsa.PrivateKey
+	var publicKey rsa.PublicKey
 
 	if p.Node.Paths.Cert != "" || p.Node.Paths.Key != "" {
 		// Get the node's TLS cert
@@ -333,7 +334,13 @@ func (p *Params) ConvertToDefinition() (*internal.Definition, error) {
 				" tls cert: %v", err)
 		}
 
-		publicKey = &rsa.PublicKey{PublicKey: *tlsCert.PublicKey.(*gorsa.PublicKey)}
+		rsaPubKeyOld, err := tls.ExtractPublicKey(tlsCert)
+		if err != nil {
+			jww.FATAL.Panicf("Could not extract public key from "+
+				"tls cert: %v", err)
+		}
+
+		publicKey = rsa.GetScheme().ConvertPublic(&rsaPubKeyOld.PublicKey)
 
 		// Get the node's TLS Key
 		tlsKeyPEM, err := utils.ReadFile(p.Node.Paths.Key)
@@ -341,7 +348,7 @@ func (p *Params) ConvertToDefinition() (*internal.Definition, error) {
 			jww.FATAL.Panicf("Could not read tls key file: %v", err)
 		}
 
-		privateKey, err = rsa.LoadPrivateKeyFromPem(tlsKeyPEM)
+		privateKey, err = oldRsa.LoadPrivateKeyFromPem(tlsKeyPEM)
 		if err != nil {
 			jww.FATAL.Panicf("Could not decode tls key from file: %+v",
 				err)
@@ -406,7 +413,7 @@ func (p *Params) ConvertToDefinition() (*internal.Definition, error) {
 				"into a tls cert: %v", err)
 		}
 
-		def.Network.PublicKey = &rsa.PublicKey{PublicKey: *permCert.PublicKey.(*gorsa.PublicKey)}
+		def.Network.PublicKey = &oldRsa.PublicKey{PublicKey: *permCert.PublicKey.(*gorsa.PublicKey)}
 	}
 
 	//
@@ -423,7 +430,8 @@ func (p *Params) ConvertToDefinition() (*internal.Definition, error) {
 }
 
 // createNdf is a helper function which builds a network ndf based off of the
-//  server.Definition
+//
+//	server.Definition
 func createNdf(def *internal.Definition, params *Params) *ndf.NetworkDefinition {
 	// Build our node
 	ourNode := ndf.Node{

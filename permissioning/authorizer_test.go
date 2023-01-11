@@ -14,6 +14,7 @@ import (
 	"gitlab.com/elixxir/comms/node"
 	"gitlab.com/elixxir/comms/testkeys"
 	"gitlab.com/elixxir/crypto/fastRNG"
+	"gitlab.com/elixxir/crypto/rsa"
 	"gitlab.com/elixxir/primitives/current"
 	"gitlab.com/elixxir/server/internal"
 	"gitlab.com/elixxir/server/internal/state"
@@ -21,7 +22,7 @@ import (
 	"gitlab.com/elixxir/server/services"
 	"gitlab.com/xx_network/comms/connect"
 	"gitlab.com/xx_network/crypto/csprng"
-	"gitlab.com/xx_network/crypto/signature/rsa"
+	oldRsa "gitlab.com/xx_network/crypto/signature/rsa"
 	"gitlab.com/xx_network/primitives/id"
 	"gitlab.com/xx_network/primitives/utils"
 	"os"
@@ -65,13 +66,13 @@ func TestAuthorize(t *testing.T) {
 
 	//make server rsa key pair
 	pk, _ := utils.ReadFile(testkeys.GetNodeKeyPath())
-	privKey, _ := rsa.LoadPrivateKeyFromPem(pk)
+	privKey, _ := oldRsa.LoadPrivateKeyFromPem(pk)
 
 	// Initialize definition
 	def := &internal.Definition{
 		Flags:            internal.Flags{},
 		ID:               nodeId,
-		PublicKey:        privKey.GetPublic(),
+		PublicKey:        rsa.GetScheme().ConvertPublic(&privKey.GetPublic().PublicKey),
 		PrivateKey:       privKey,
 		TlsCert:          cert,
 		TlsKey:           key,
@@ -170,13 +171,13 @@ func TestAuthorize_Error(t *testing.T) {
 
 	//make server rsa key pair
 	pk, _ := utils.ReadFile(testkeys.GetNodeKeyPath())
-	privKey, _ := rsa.LoadPrivateKeyFromPem(pk)
+	privKey, _ := oldRsa.LoadPrivateKeyFromPem(pk)
 
 	// Initialize definition
 	def := &internal.Definition{
 		Flags:            internal.Flags{},
 		ID:               nodeId,
-		PublicKey:        privKey.GetPublic(),
+		PublicKey:        rsa.GetScheme().ConvertPublic(&privKey.GetPublic().PublicKey),
 		PrivateKey:       privKey,
 		TlsCert:          cert,
 		TlsKey:           key,
@@ -276,13 +277,13 @@ func TestSend(t *testing.T) {
 
 	//make server rsa key pair
 	pk, _ := utils.ReadFile(testkeys.GetNodeKeyPath())
-	privKey, _ := rsa.LoadPrivateKeyFromPem(pk)
+	privKey, _ := oldRsa.LoadPrivateKeyFromPem(pk)
 
 	// Initialize definition
 	def := &internal.Definition{
 		Flags:            internal.Flags{},
 		ID:               nodeId,
-		PublicKey:        privKey.GetPublic(),
+		PublicKey:        rsa.GetScheme().ConvertPublic(&privKey.GetPublic().PublicKey),
 		PrivateKey:       privKey,
 		TlsCert:          cert,
 		TlsKey:           key,
@@ -412,13 +413,13 @@ func TestSend_ErrorOnce(t *testing.T) {
 
 	//make server rsa key pair
 	pk, _ := utils.ReadFile(testkeys.GetNodeKeyPath())
-	privKey, _ := rsa.LoadPrivateKeyFromPem(pk)
+	privKey, _ := oldRsa.LoadPrivateKeyFromPem(pk)
 
 	// Initialize definition
 	def := &internal.Definition{
 		Flags:            internal.Flags{},
 		ID:               nodeId,
-		PublicKey:        privKey.GetPublic(),
+		PublicKey:        rsa.GetScheme().ConvertPublic(&privKey.GetPublic().PublicKey),
 		PrivateKey:       privKey,
 		TlsCert:          cert,
 		TlsKey:           key,
